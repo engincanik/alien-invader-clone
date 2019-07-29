@@ -34,35 +34,29 @@ var Sword = new Phaser.Class({
 })
 
 
-var Enemy = new Phaser.Class({
-    Extends: Phaser.Physics.Arcade.Sprite,
-    initialize:
-    
-    function Enemy (scene)
-    {
-        Phaser.Physics.Arcade.Sprite.call(this,scene,0,0,'dragon')
-        this.setDepth(1)
-        this.speed = 100
-    },
-    launch: () =>
-    {
-        this.checkOutOfBounds() = false
-        this.setActive(true)
-        this.setVisible(true)
-        dragons.x = 100
-        dragons.y = 50
-
-        //var tween = this.physics.add.tween(dragons).to({x:200},
-          //  2000,Phaser.Easing.Lineer.None,true,1000,true)   
-        //tween.onLoop.add(descend,this )
-
-    }
-})
-
 class firstScene extends Phaser.Scene {
     constructor(){
         super({key: "firstScene"});
     }
+
+    /*createDragons() {
+
+        // We want 3 rows of 10 aliens each.
+        for ( var y = 0; y < 3; y++ ) {
+            for ( var x = 0; x < 10; x++ ) {
+                var dragon = dragons.create( x *5, y * 4, 'dragon' );
+                dragon.setOrigin( 0.5, 0.5 );
+                //dragon.lastFired = 0;
+                
+            }
+        }
+    
+        // Center our collection of aliens.
+        Phaser.Actions.IncX( dragons.getChildren(), 60 );
+    
+        // Bring them further into the scene vertically.
+        Phaser.Actions.IncY( dragons.getChildren(), 75 );
+    }*/
 
     preload() {
         this.load.image("bg_1",'assets/fencesky.png')
@@ -82,8 +76,10 @@ class firstScene extends Phaser.Scene {
             frameHeight: 42,
             frameWidth: 42
         })
+        
         this.load.image("shinySword",'assets/shinySword.png')
-        this.load.image('dragon',"assets/dragon.png")
+        this.load.image('dragon' , 'assets/dragon.png')
+        
     }
 
     create() {
@@ -92,13 +88,14 @@ class firstScene extends Phaser.Scene {
         this.bg_1.displayWidth = this.sys.game.config.width
         this.bg_1.setOrigin(0,0)
         this.bg_1.setScrollFactor(0)
-
+        
         this.key_A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
         this.key_D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         this.key_Space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
 
         knight = this.physics.add.sprite(200,485,'kIdle')
         knight.setScale(2)
+        knight.setCollideWorldBounds(true)
 
         this.anims.create({
             key: 'right',
@@ -131,25 +128,27 @@ class firstScene extends Phaser.Scene {
             runChildUpdate: true
         })
 
-        dragons = this.add.group({
-            classType: Enemy,
-            runChildUpdate: true
+        dragons = this.physics.add.group({
+            key:'dragon',
+            frameQuantity:20,
+            collideWorldBounds:'true',
         })
+
+    
+        /*Phaser.Actions.GridAlign(group.getChildren(), {
+            width: 10,
+            height: 10,
+            cellWidth: 32,
+            cellHeight: 32,
+            x: 100,
+            y: 100
+        });*/
+
+
 
     }
     update(){
-        //this.bg_1.tilePositionX += 10
-        
-        /*if(this.key_A.isDown){
-            for(let y = 0; y<4; y++){
-                for (let x = 0; x < 10; x++) {
-                    let dragon = dragons.get()        
-                    if (dragon) {
-                        dragon.setOrigin(0+x,0+y)
-                    }
-                }
-            } 
-        }*/
+        this.bg_1.tilePositionX += 10
         
         if(this.key_A.isDown)
         {   
