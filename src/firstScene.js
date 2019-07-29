@@ -62,6 +62,11 @@ class firstScene extends Phaser.Scene {
         this.load.image('dragon' , 'assets/dragon.png')
         this.load.image('Iwall','assets/InvisibleWall.png')
 
+        this.load.spritesheet('redFire','assets/redFire.png',{
+            frameHeight:30,
+            frameWidth:30
+        })
+        this.load.image('blueFire','assets/blueFire.gif')
     }
 
     create() {
@@ -74,6 +79,7 @@ class firstScene extends Phaser.Scene {
         this.key_A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
         this.key_D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         this.key_Space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+        this.key_F = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F)
 
         this.wall1 = this.physics.add.sprite(-30,10,'Iwall')
         this.wall1.scaleY = 7
@@ -81,8 +87,15 @@ class firstScene extends Phaser.Scene {
         this.wall2 = this.physics.add.sprite(830,10,'Iwall')
         this.wall2.scaleY = 7
         
+        this.fire = this.physics.add.sprite(100,100,'blueFire')
         
 
+        this.anims.create({
+            key:'fire',
+            frames: this.anims.generateFrameNumbers('redFire',{start: 0, end:0}),
+            frameRate: 10,
+            repeat: -1
+        })
         
         knight = this.physics.add.sprite(200,485,'kIdle')
         knight.setScale(2)
@@ -113,7 +126,7 @@ class firstScene extends Phaser.Scene {
             repeat: -1
         })
 
-        swords = this.add.group({
+        swords = this.physics.add.group({
             classType: Sword,
             maxSize: 10,
             runChildUpdate: true
@@ -143,11 +156,14 @@ class firstScene extends Phaser.Scene {
         this.physics.add.collider(dragons,this.wall1,this.collisionHandler,null,this)
         this.physics.add.collider(dragons,this.wall2,this.collisionHandler2,null,this)
 
+        this.physics.add.overlap(dragons,swords,this.enemyHit,null,this)
+
         this.wall1.body.immovable = true
         this.wall2.body.immovable = true
     }
     update(){
         this.bg_1.tilePositionX += 10
+
 
         
         if(yon==0){
@@ -163,6 +179,11 @@ class firstScene extends Phaser.Scene {
               })
         }
 
+
+
+        if(this.key_F.isDown){
+            this.fire.setVelocityY(100)
+        }
 
         if(this.key_A.isDown)
         {   
@@ -192,11 +213,28 @@ class firstScene extends Phaser.Scene {
                 sword.fire(knight.x,knight.y)
             }
         }
+        /*this.swords.children.each((b) => {
+            if (b.active) {
+                if (b.y < 0) {
+                    b.setActive(false);
+                }
+            }
+        })*/
     }
     collisionHandler(){
         yon = 0
     }
     collisionHandler2(){
         yon = 1
+    }
+    enemyHit(dragon,sword){
+        if ( sword.active === true ) {
+            console.log("Hit!");
+    
+            sword.setActive(false)
+            sword.setVisible(false)
+            dragon.body.destroy(true)
+            dragon.setVisible(false)
+        }
     }
 }
