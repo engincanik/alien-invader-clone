@@ -129,6 +129,7 @@ class firstScene extends Phaser.Scene {
                 //dragon.setCollideWorldBounds(true)
                 dragon.setOrigin( 0.1, 0.1 );
                 dragon.setScale(0.5)
+                dragon.body.immovable = true
 
             }
         }
