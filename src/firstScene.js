@@ -4,8 +4,16 @@
 let knight;
 let k;
 var swords;
+var dragon;
 var dragons;
 let yon;
+var score=0;
+var life =3;
+var z=0;
+var firingTimer = 0;
+var blueFires;
+var livingEnemies = [];
+var blueFire;
 
 var Sword = new Phaser.Class({
     Extends: Phaser.GameObjects.Image,
@@ -18,7 +26,7 @@ var Sword = new Phaser.Class({
     },
     fire: function(x,y)
     {
-        this.setPosition(x,y-50)
+        this.setPosition(x,y-10)
         this.setActive(true)
         this.setVisible(true)
     },
@@ -33,10 +41,35 @@ var Sword = new Phaser.Class({
     }
 })
 
+var Fire = new Phaser.Class({
+    Extends: Phaser.GameObjects.Image,
+
+    initialize:
+    function Fire (scene)
+    {
+        Phaser.GameObjects.Image.call(this,scene,0,0,'blueFire')
+        this.speed = Phaser.Math.GetSpeed(300,1)
+    },
+    fire: function(x,y)
+    {
+        this.setPosition(x+5,y)
+        this.setActive(true)
+        this.setVisible(true)
+    },
+    update: function (time,delta)
+    {
+        this.y += this.speed * delta
+        if(this.y > 800)
+        {
+            this.setActive(false)
+            this.setVisible(false)
+        }
+    }
+})
 
 class firstScene extends Phaser.Scene {
     constructor(){
-        super({key: "firstScene"});
+        super({key: "firstScene" , active: true});
     }
 
     preload() {
@@ -79,15 +112,13 @@ class firstScene extends Phaser.Scene {
         this.key_A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
         this.key_D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         this.key_Space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-        this.key_F = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F)
+        this.key_R = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R)
+        this.key_P = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P)
 
         this.wall1 = this.physics.add.sprite(-30,10,'Iwall')
         this.wall1.scaleY = 7
-        
         this.wall2 = this.physics.add.sprite(830,10,'Iwall')
         this.wall2.scaleY = 7
-        
-        this.fire = this.physics.add.sprite(100,100,'blueFire')
         
 
         this.anims.create({
@@ -128,21 +159,30 @@ class firstScene extends Phaser.Scene {
 
         swords = this.physics.add.group({
             classType: Sword,
-            maxSize: 10,
+            maxSize: 3,
             runChildUpdate: true
         })
 
         dragons = this.physics.add.group({
-            maxSize: 18
+            maxSize: 30
         })
 
+        blueFires = this.physics.add.group({
+            classType: Fire,
+            maxSize: 3,
+            runChildUpdate: true
+        })
+        
+        
+
         for ( var y = 0; y < 3; y++ ) {
-            for ( var x = 0; x < 6; x++ ) {
-                var dragon = dragons.create( x *80, y * 100, 'dragon' );
+            for ( var x = 0; x < 7; x++ ) {
+                dragon = dragons.create( x *80, y * 100, 'dragon' );
                 //dragon.setCollideWorldBounds(true)
                 dragon.setOrigin( 0.1, 0.1 );
-                dragon.setScale(0.5)
+                dragon.setScale(0.4)
                 dragon.body.immovable = true
+                
 
             }
         }
@@ -155,34 +195,37 @@ class firstScene extends Phaser.Scene {
         yon=0
         this.physics.add.collider(dragons,this.wall1,this.collisionHandler,null,this)
         this.physics.add.collider(dragons,this.wall2,this.collisionHandler2,null,this)
-
+        this.physics.add.overlap(blueFires,swords,this.bulletCollide,null,this)
         this.physics.add.overlap(dragons,swords,this.enemyHit,null,this)
+        this.physics.add.overlap(knight,blueFires,this.enemyKill,null,this)
 
         this.wall1.body.immovable = true
         this.wall2.body.immovable = true
+
+        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
+        this.lifeText = this.add.text(16, 64, 'Life: 3', { fontSize: '32px', fill: '#250' });
     }
     update(){
         this.bg_1.tilePositionX += 10
 
+        if(this.time.now > firingTimer){
+            this.enemyFires()
+        }
 
-        
+        if(score==21){
+            this.scene.pause()
+            this.scene.launch('winScene')
+        }
+
         if(yon==0){
             Phaser.Actions.Call(dragons.getChildren(), function(go) {
                 go.setVelocityX(100)
                 })
         }
-        
-        
         if(yon==1){
             Phaser.Actions.Call(dragons.getChildren(), function(go) {
                 go.setVelocityX(-100)
               })
-        }
-
-
-
-        if(this.key_F.isDown){
-            this.fire.setVelocityY(100)
         }
 
         if(this.key_A.isDown)
@@ -213,13 +256,16 @@ class firstScene extends Phaser.Scene {
                 sword.fire(knight.x,knight.y)
             }
         }
-        /*this.swords.children.each((b) => {
-            if (b.active) {
-                if (b.y < 0) {
-                    b.setActive(false);
-                }
-            }
-        })*/
+        if (Phaser.Input.Keyboard.JustDown(this.key_R)) {
+            this.scene.restart()
+            score = 0
+            life = 3
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.key_P)) {
+            this.scene.pause('firstScene')
+            this.scene.launch('pauseScene')
+            
+        }
     }
     collisionHandler(){
         yon = 0
@@ -235,6 +281,66 @@ class firstScene extends Phaser.Scene {
             sword.setVisible(false)
             dragon.body.destroy(true)
             dragon.setVisible(false)
+            score += 1
+            this.scoreText.setText('Score: ' + score);
+        }
+    }
+    enemyKill(knight,blueFire){
+        if ( blueFire.active === true ) {
+            console.log("Die!");
+    
+            blueFire.setActive(false)
+            blueFire.setVisible(false)
+            
+            life -= 1
+            this.lifeText.setText('Life: ' + life);
+            if(life==0){
+                knight.body.destroy(true)
+                knight.setVisible(false)
+                this.scene.launch('deadScene')
+            }
+        }
+    }
+    /*enemyFires(dragon){
+        livingEnemies.push(dragon)
+        var random = Phaser.Math.Between(0,livingEnemies.length-1)
+         
+        var shooter = livingEnemies[random]
+        blueFire = blueFires.get()
+        if(blueFire)
+        {
+            blueFire.fire(shooter.x,shooter.y)
+        }
+    }*/
+    enemyFires () {
+        blueFire = blueFires.get();
+        livingEnemies.length=0;
+
+        Phaser.Actions.Call(dragons.getChildren(), function(dragon) {
+            livingEnemies.push(dragon)
+            })
+
+        if (blueFire && livingEnemies.length > 0)
+        {
+            
+            var random = Phaser.Math.Between(0,livingEnemies.length-1)
+            // randomly select one of them
+            var shooter=livingEnemies[random];
+            // And fire the bullet from this enemy
+            blueFire.fire(shooter.body.x, shooter.body.y);
+            //firingTimer = this.time.now + 2000;
+        }
+    
+    }
+    bulletCollide(blueFire,sword){
+        if ( sword.active === true ) {
+            console.log("Hit!");
+
+            sword.setActive(false)
+            sword.setVisible(false)
+            blueFire.body.destroy(true)
+            blueFire.setVisible(false)
+        
         }
     }
 }
