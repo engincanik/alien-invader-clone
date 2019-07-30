@@ -5,7 +5,7 @@
 let game = new Phaser.Game({
     width:800,
     height:600,
-    scene: [firstScene,pauseScene],
+    scene: [firstScene,pauseScene,deadScene,winScene],
     physics: {
         default: 'arcade',
         arcade: {
