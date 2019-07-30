@@ -213,7 +213,9 @@ class firstScene extends Phaser.Scene {
         }
 
         if(score==21){
+            
             this.scene.pause()
+            score = 0
             this.scene.launch('winScene')
         }
 
@@ -280,6 +282,8 @@ class firstScene extends Phaser.Scene {
             sword.setActive(false)
             sword.setVisible(false)
             dragon.body.destroy(true)
+            dragon.setActive(false)
+            dragon.destroy()
             dragon.setVisible(false)
             score += 1
             this.scoreText.setText('Score: ' + score);
@@ -294,40 +298,37 @@ class firstScene extends Phaser.Scene {
             
             life -= 1
             this.lifeText.setText('Life: ' + life);
-            if(life==0){
+            if(life<1){
                 knight.body.destroy(true)
                 knight.setVisible(false)
+                this.scene.pause()
+                score = 0
+                life = 3
                 this.scene.launch('deadScene')
             }
         }
     }
-    /*enemyFires(dragon){
-        livingEnemies.push(dragon)
-        var random = Phaser.Math.Between(0,livingEnemies.length-1)
-         
-        var shooter = livingEnemies[random]
-        blueFire = blueFires.get()
-        if(blueFire)
-        {
-            blueFire.fire(shooter.x,shooter.y)
-        }
-    }*/
     enemyFires () {
         blueFire = blueFires.get();
         livingEnemies.length=0;
 
         Phaser.Actions.Call(dragons.getChildren(), function(dragon) {
             livingEnemies.push(dragon)
+            console.log(livingEnemies.length)
             })
 
         if (blueFire && livingEnemies.length > 0)
         {
             
             var random = Phaser.Math.Between(0,livingEnemies.length-1)
-            // randomly select one of them
+
+            
             var shooter=livingEnemies[random];
-            // And fire the bullet from this enemy
-            blueFire.fire(shooter.body.x, shooter.body.y);
+            if(shooter.active == true){
+                blueFire.fire(shooter.body.x, shooter.body.y);
+                livingEnemies.pop()
+            }
+            
             //firingTimer = this.time.now + 2000;
         }
     
